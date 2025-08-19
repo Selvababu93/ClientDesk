@@ -1,0 +1,17 @@
+pc-rmm/
+├─ server/
+│  ├─ app/
+│  │  ├─ main.py
+│  │  ├─ models.py
+│  │  ├─ db.py
+│  │  ├─ schemas.py
+│  │  ├─ auth.py
+│  │  ├─ alerts.py
+│  │  └─ utils.py
+│  ├─ requirements.txt
+│  └─ docker-compose.yml
+└─ agent/
+   ├─ agent.py
+   ├─ requirements.txt
+   ├─ windows_service.py   # optional pywin32 service
+   └─ rmm-agent.service    # systemd unit
