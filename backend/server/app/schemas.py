@@ -8,9 +8,12 @@ class RegisterReq(BaseModel):
     agent_version: str
 
 class RegisterResp(BaseModel):
-    device_id: int
+    id: int
     token: str
 
+    class Config:
+        from_attributes = True
+   
 class MetricIn(BaseModel):
     cpu: float
     mem: float
@@ -31,3 +34,12 @@ class CommandOut(BaseModel):
 class CommandUpdate(BaseModel):
     status: str
     result: Optional[str] = None
+
+
+# This is to avoid register again and agian for same device in db
+class DeviceResp(BaseModel):
+    id : int
+    token : str
+
+    class Config:
+        from_attributes = True

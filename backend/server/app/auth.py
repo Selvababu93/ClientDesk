@@ -2,6 +2,7 @@ import os, secrets
 from fastapi import Header, HTTPException
 from sqlalchemy.orm import Session
 from .models import Device
+from .schemas import DeviceResp
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -26,3 +27,9 @@ def require_agent(db: Session, authorization: str | None) -> Device:
 def require_admin(authorization: str | None):
     if authorization != f"Bearer {ADMIN_TOKEN}":
         raise HTTPException(401, "Admin token invalid")
+
+
+def get_agent_by_hostname(db : Session, hostname : str) -> DeviceResp | None:
+
+    return db.query(Device).filter(Device.hostname == hostname).first()
+

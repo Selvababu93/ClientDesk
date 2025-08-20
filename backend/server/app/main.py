@@ -9,8 +9,8 @@ from redis import Redis
 
 from .db import Base, engine, get_db
 from .models import Device, Metric, Command
-from .schemas import RegisterReq, RegisterResp, MetricIn, CommandCreate, CommandOut, CommandUpdate
-from .auth import gen_token, require_agent, require_admin
+from .schemas import RegisterReq, RegisterResp, MetricIn, CommandCreate, CommandOut, CommandUpdate, DeviceResp
+from .auth import gen_token, require_agent, require_admin, get_agent_by_hostname
 from .utils import maybe_alert
 
 Base.metadata.create_all(bind=engine)
@@ -29,14 +29,20 @@ def admin_login(authorization: str | None= Header(None)):
     require_admin(authorization)
     return{"status" : "ok", "message" : "Admin token valid"}
 
-@app.post("/register", response_model=RegisterResp)
-def register(req: RegisterReq, db: Session = Depends(get_db)):
-    token = gen_token()
-    dev = Device(hostname=req.hostname, os=req.os, arch=req.arch,
-                 agent_version=req.agent_version, token=token,
-                 last_seen=datetime.utcnow(), online=False)
-    db.add(dev); db.commit(); db.refresh(dev)
-    return RegisterResp(device_id=dev.id, token=token)
+@app.post("/register", response_model =RegisterResp)
+def  register(req: RegisterReq, db: Session = Depends(get_db)):
+    existing_device = get_agent_by_hostname(db, req.hostname)
+    if existing_device:
+        print(f"Device found : {str(existing_device)}")
+        return DeviceResp.from_orm(existing_device)
+    else:
+        token = gen_token()
+        new_device = Device(hostname=req.hostname, os=req.os, arch=req.arch,
+                            agent_version= req.agent_version, token=token,
+                            last_seen=datetime.utcnow(), online=False)
+        db.add(new_device); db.commit(); db.refresh(new_device)
+        return RegisterResp.model_validate(new_device)
+
 
 @app.post("/metrics")
 def metrics(m: MetricIn, authorization: str | None = Header(None), db: Session = Depends(get_db)):
